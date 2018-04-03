@@ -27,30 +27,37 @@ copy_file "db/migrate/20180403124752_enable_pgcrypto_extension.rb"
 
 
 @install_devise = yes?("Install devise? : ")
+@install_haml   = yes?("Install haml? : ")
+@install_onkcop = yes?("Install onkcop? : ")
+@install_precommit = yes?("Install pre-commit? : ")
+@install_rspec  = yes?("Install rspec? : ")
+
 if @install_devise then
   gem "devise"
   gem "devise-i18n"
 end
-
-@install_haml   = yes?("Install haml? : ")
 if @install_haml
   gem "haml"
   gem "haml-rails"
 end
 
-@install_onkcop = yes?("Install onkcop? : ")
-if @install_onkcop then
-  gem_group :development do
-    gem "onkcop", require: false
-  end
-  copy_file ".rubocop.yml"
-end
-
-@install_rspec  = yes?("Install rspec? : ")
-if @install_rspec then
-  gem_group :development, :test do
+gem_group :development, :test do
+  if @install_rspec then
     gem "rspec-rails"
   end
+end
+
+gem_group :development do
+  if @install_onkcop then
+    gem "onkcop", require: false
+  end
+  if @install_precommit then
+    gem "pre-commit", require: false
+  end
+end
+
+if @install_onkcop then
+  copy_file ".rubocop.yml"
 end
 
 
@@ -75,6 +82,11 @@ after_bundle do
 
   if @install_haml then
     run "HAML_RAILS_DELETE_ERB=true bundle exec rake haml:erb2haml"
+  end
+
+  if @install_precommit then
+    run "bundle exec pre-commit install"
+    git config: "pre-commit.ruby 'bundle exec ruby'"
   end
 
   if @install_rspec then
